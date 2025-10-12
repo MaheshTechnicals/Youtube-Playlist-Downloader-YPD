@@ -1,0 +1,25 @@
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Downloads and zips
+downloads/
+*.zip
+
+# IDE / Editor junk
+.vscode/
+.idea/
+*.swp
+
+# Logs
+logs/
+*.log
