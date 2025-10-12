@@ -72,11 +72,15 @@ async function createZip(folder, zipFile) {
 (async () => {
   console.clear();
   console.log(chalk.bold.cyan(`
-╔═════════════════════════════════════════════╗
-║   🎬 YPD - YouTube Playlist Downloader      ║
-║   🎥 Download & manage playlists easily     ║
-╚═════════════════════════════════════════════╝
-        by MaheshTechnicals
+ __     _______  _____  
+ \\ \\   / /  __ \\|  __ \\ 
+  \\ \\_/ /| |__) | |  | |
+   \\   / |  ___/| |  | |
+    | |  | |    | |__| |
+    |_|  |_|    |_____/ 
+
+YouTube Playlist Downloader
+        by Mahesh Technicals
   `));
 
   // Playlist URL
