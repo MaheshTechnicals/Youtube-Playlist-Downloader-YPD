@@ -12,6 +12,7 @@ import ytdlp from "yt-dlp-exec";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// === Fetch playlist info ===
 async function getPlaylistInfo(url) {
   try {
     const result = await ytdlp(url, {
@@ -28,6 +29,7 @@ async function getPlaylistInfo(url) {
   }
 }
 
+// === Download a single video ===
 async function downloadVideo(video, outputDir) {
   const spinner = ora(chalk.cyan(`Downloading: ${video.title}`)).start();
   try {
@@ -44,6 +46,7 @@ async function downloadVideo(video, outputDir) {
   }
 }
 
+// === Create ZIP file ===
 async function createZip(folder, zipFile) {
   const output = fs.createWriteStream(zipFile);
   const archive = archiver("zip", { zlib: { level: 9 } });
@@ -57,6 +60,7 @@ async function createZip(folder, zipFile) {
   });
 }
 
+// === Main Runner ===
 (async () => {
   console.clear();
   console.log(chalk.bold.cyan(`
@@ -66,6 +70,7 @@ async function createZip(folder, zipFile) {
   by MaheshTechnicals
   `));
 
+  // Ask for playlist URL
   const { playlistURL } = await inquirer.prompt([
     {
       type: "input",
@@ -79,6 +84,7 @@ async function createZip(folder, zipFile) {
   const videos = await getPlaylistInfo(playlistURL);
   console.log(chalk.green(`\n✅ Found ${videos.length} videos!\n`));
 
+  // Ask which videos to download
   const { selectedVideos } = await inquirer.prompt([
     {
       type: "checkbox",
@@ -90,19 +96,36 @@ async function createZip(folder, zipFile) {
     }
   ]);
 
+  // Prepare download directory
   const outputDir = path.join(__dirname, "downloads");
   await fs.ensureDir(outputDir);
 
+  // Download each selected video
   for (const video of selectedVideos) {
     await downloadVideo(video, outputDir);
   }
 
+  // Create ZIP archive
   const zipFile = path.join(__dirname, "playlist.zip");
   console.log(chalk.yellow("\nCreating ZIP file..."));
   await createZip(outputDir, zipFile);
   console.log(chalk.green(`\n📦 Created ZIP: ${zipFile}`));
 
+  // Cleanup
   await fs.remove(outputDir);
   console.log(chalk.gray("🧹 Cleaned up raw video files."));
   console.log(chalk.bold.green("\n🎉 All Done! Enjoy your videos.\n"));
-})();
+})().catch(async err => {
+  if (err.name === "ExitPromptError") {
+    console.log(chalk.red("\n✋ Operation cancelled by user."));
+    const outputDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "downloads");
+    if (await fs.pathExists(outputDir)) {
+      await fs.remove(outputDir);
+      console.log(chalk.gray("🧹 Cleaned up partial downloads."));
+    }
+    process.exit(0);
+  } else {
+    console.error(chalk.red("\n❌ Unexpected Error:"), err);
+    process.exit(1);
+  }
+});
