@@ -1,16 +1,17 @@
 #!/usr/bin/env node
 import inquirer from "inquirer";
-import { execSync } from "child_process";
 import fs from "fs-extra";
 import chalk from "chalk";
-import ora from "ora";
-import archiver from "archiver";
 import path from "path";
 import { fileURLToPath } from "url";
 import ytdlp from "yt-dlp-exec";
+import archiver from "archiver";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Force yt-dlp to use system executable
+ytdlp.options = { executablePath: "yt-dlp" };
 
 // === Fetch playlist info ===
 async function getPlaylistInfo(url) {
@@ -19,10 +20,13 @@ async function getPlaylistInfo(url) {
       dumpSingleJson: true,
       flatPlaylist: true
     });
-    return result.entries.map(v => ({
-      title: v.title || "Unknown Title",
-      url: `https://www.youtube.com/watch?v=${v.id}`
-    }));
+    return {
+      title: result.title || "playlist",
+      videos: result.entries.map(v => ({
+        title: v.title || "Unknown Title",
+        url: `https://www.youtube.com/watch?v=${v.id}`
+      }))
+    };
   } catch (error) {
     console.error(chalk.red("❌ Failed to fetch playlist info:"), error.message);
     process.exit(1);
@@ -30,19 +34,23 @@ async function getPlaylistInfo(url) {
 }
 
 // === Download a single video ===
-async function downloadVideo(video, outputDir) {
-  const spinner = ora(chalk.cyan(`Downloading: ${video.title}`)).start();
+async function downloadVideo(video, outputDir, index, total) {
+  const sanitizedTitle = video.title.replace(/[<>:"/\\|?*]+/g, "");
+  const outputPath = path.join(outputDir, `${sanitizedTitle}.mp4`);
+
+  console.log(chalk.cyan(`\n[${index}/${total}] Downloading: ${video.title}`));
+
   try {
-    const sanitizedTitle = video.title.replace(/[<>:"/\\|?*]+/g, "");
-    const outputPath = path.join(outputDir, `${sanitizedTitle}.mp4`);
     await ytdlp(video.url, {
       output: outputPath,
       format: "bestvideo+bestaudio/best",
       mergeOutputFormat: "mp4"
     });
-    spinner.succeed(chalk.green(`✅ Downloaded: ${video.title}`));
-  } catch (error) {
-    spinner.fail(chalk.red(`❌ Failed: ${video.title}`));
+    console.log(chalk.green(`[${index}/${total}] ✅ Completed: ${video.title}`));
+    return sanitizedTitle;
+  } catch (err) {
+    console.log(chalk.red(`[${index}/${total}] ❌ Failed: ${video.title}`));
+    return null;
   }
 }
 
@@ -64,13 +72,14 @@ async function createZip(folder, zipFile) {
 (async () => {
   console.clear();
   console.log(chalk.bold.cyan(`
-╔═══════════════════════════════════╗
-║     🎬 YOUTUBE PLAYLIST DOWNLOADER ║
-╚═══════════════════════════════════╝
-  by MaheshTechnicals
+╔═════════════════════════════════════════════╗
+║   🎬 YPD - YouTube Playlist Downloader      ║
+║   🎥 Download & manage playlists easily     ║
+╚═════════════════════════════════════════════╝
+        by MaheshTechnicals
   `));
 
-  // Ask for playlist URL
+  // Playlist URL
   const { playlistURL } = await inquirer.prompt([
     {
       type: "input",
@@ -81,10 +90,10 @@ async function createZip(folder, zipFile) {
   ]);
 
   console.log(chalk.blue("\nFetching playlist info..."));
-  const videos = await getPlaylistInfo(playlistURL);
-  console.log(chalk.green(`\n✅ Found ${videos.length} videos!\n`));
+  const { title: playlistTitle, videos } = await getPlaylistInfo(playlistURL);
+  console.log(chalk.green(`\n✅ Found ${videos.length} videos in playlist: "${playlistTitle}"\n`));
 
-  // Ask which videos to download
+  // Video selection
   const { selectedVideos } = await inquirer.prompt([
     {
       type: "checkbox",
@@ -96,29 +105,44 @@ async function createZip(folder, zipFile) {
     }
   ]);
 
-  // Prepare download directory
   const outputDir = path.join(__dirname, "downloads");
   await fs.ensureDir(outputDir);
 
   // Download each selected video
+  console.log(chalk.blue("\nStarting downloads...\n"));
+  let counter = 0;
   for (const video of selectedVideos) {
-    await downloadVideo(video, outputDir);
+    counter++;
+    await downloadVideo(video, outputDir, counter, selectedVideos.length);
   }
 
-  // Create ZIP archive
-  const zipFile = path.join(__dirname, "playlist.zip");
-  console.log(chalk.yellow("\nCreating ZIP file..."));
-  await createZip(outputDir, zipFile);
-  console.log(chalk.green(`\n📦 Created ZIP: ${zipFile}`));
+  // Ask user if they want to zip
+  const { zipChoice } = await inquirer.prompt([
+    {
+      type: "confirm",
+      name: "zipChoice",
+      message: chalk.yellow("\nDo you want to zip the downloaded videos?"),
+      default: true
+    }
+  ]);
 
-  // Cleanup
-  await fs.remove(outputDir);
-  console.log(chalk.gray("🧹 Cleaned up raw video files."));
+  if (zipChoice) {
+    const sanitizedPlaylist = playlistTitle.replace(/[<>:"/\\|?*]+/g, "");
+    const zipFile = path.join(__dirname, `${sanitizedPlaylist}.zip`);
+    console.log(chalk.blue("\nCreating ZIP file..."));
+    await createZip(outputDir, zipFile);
+    console.log(chalk.green(`\n📦 ZIP created: ${zipFile}`));
+    await fs.remove(outputDir);
+    console.log(chalk.gray("🧹 Raw video files removed."));
+  } else {
+    console.log(chalk.gray("\n✅ Videos kept in downloads folder, no ZIP created."));
+  }
+
   console.log(chalk.bold.green("\n🎉 All Done! Enjoy your videos.\n"));
 })().catch(async err => {
   if (err.name === "ExitPromptError") {
     console.log(chalk.red("\n✋ Operation cancelled by user."));
-    const outputDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "downloads");
+    const outputDir = path.join(__dirname, "downloads");
     if (await fs.pathExists(outputDir)) {
       await fs.remove(outputDir);
       console.log(chalk.gray("🧹 Cleaned up partial downloads."));
