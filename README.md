@@ -1,21 +1,34 @@
-# 🎬 YouTube Playlist Downloader (YPD)
+# 🎬 YouTube Downloader CLI (YPD)
 
 ![GitHub License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Node.js](https://img.shields.io/badge/node-%3E%3D20.x-brightgreen.svg)
 ![Author](https://img.shields.io/badge/Author-Mahesh%20Technicals-cyan.svg)
 
-A powerful and user-friendly terminal-based tool to download entire YouTube playlists with features like multi-video selection, progress display, automatic ZIP creation, and cleanup.
+An all-in-one terminal tool for downloading YouTube content. Choose from four modes: download a **single video**, multiple videos via **comma-separated URLs**, an entire **playlist**, or extract **high-quality MP3 audio**.
 
 ---
 
 ## ✨ Features
 
-- **Interactive Interface**: Fetches all videos from a playlist and lets you choose which ones to download using an interactive menu.
-- **Best Quality**: Automatically downloads videos in the best available video and audio quality and merges them into a single `.mp4` file.
-- **ZIP Archiving**: Optionally compresses all downloaded videos into a single, convenient `.zip` file named after the playlist.
-- **Automatic Cleanup**: If you choose to create a ZIP file, the script automatically removes the raw video files to save space.
-- **User-Friendly**: Provides clear, color-coded feedback for download progress, success, and errors.
-- **Robust Error Handling**: Gracefully handles user cancellations and unexpected errors, cleaning up any partial downloads.
+- **📺 Single Video Mode:**
+    - Quickly download any single YouTube video in the best available quality.
+    - Files are saved directly to `downloads/videos/`.
+
+- **🎥 Multi-Video Mode:**
+    - Download multiple videos in one go by pasting a comma-separated list of URLs.
+    - Each video is saved to `downloads/multi/`.
+
+- **📜 Playlist Mode:**
+    - Download all videos from a public YouTube playlist.
+    - Videos are neatly organized into a subfolder named after the playlist title inside `downloads/zips/`.
+
+- **🎧 MP3 Downloader Mode:**
+    - Extract and download the audio from any YouTube video as a high-quality MP3 file.
+    - Perfect for music, podcasts, and lectures.
+    - Audio files are saved to `downloads/mp3/`.
+
+- **Simple & Fast**: A clean, menu-driven interface gets your downloads started in seconds.
+- **Organized**: Automatically sorts your downloads into dedicated folders based on the mode used.
 
 ---
 
@@ -24,8 +37,8 @@ A powerful and user-friendly terminal-based tool to download entire YouTube play
 Before you begin, ensure you have the following installed on your system:
 
 1.  **[Node.js](https://nodejs.org/)**: **Version 20 or higher.**
-    - For a detailed guide on installing Node.js on Android via Termux, follow this guide: **[How to Install Node.js on Android](https://maheshtechnicals.com/how-to-install-node-js-on-android/)**.
-2.  **[yt-dlp](https://github.com/yt-dlp/yt-dlp#installation)**: This tool relies on `yt-dlp` being installed and available in your system's PATH. This is a crucial dependency.
+    - For a guide on installing Node.js on Android via Termux, see: **[How to Install Node.js on Android](https://maheshtechnicals.com/how-to-install-node-js-on-android/)**.
+2.  **Basic CLI knowledge Needed.**
 
 ---
 
@@ -33,7 +46,8 @@ Before you begin, ensure you have the following installed on your system:
 
 1.  **Clone the repository:**
     ```sh
-    git clone [https://github.com/MaheshTechnicals/Youtube-Playlist-Downloader-YPD.git](https://github.com/MaheshTechnicals/Youtube-Playlist-Downloader-YPD.git)
+    git clone https://github.com/MaheshTechnicals/Youtube-Playlist-Downloader-YPD.git
+
     ```
 
 2.  **Navigate to the project directory:**
@@ -50,20 +64,16 @@ Before you begin, ensure you have the following installed on your system:
     ```sh
     npm start
     ```
-
-The script will then guide you through the process of entering a playlist URL, selecting videos, and downloading them.
+    The script will present a main menu. Choose an option and follow the on-screen prompts to paste the required URL(s).
 
 ---
 
 ## 🔧 Key Dependencies
 
-This project is built with the help of these amazing libraries:
-
-- [yt-dlp-exec](https://www.npmjs.com/package/yt-dlp-exec): To run `yt-dlp` commands.
-- [Inquirer](https://www.npmjs.com/package/inquirer): For the interactive command-line prompts.
-- [Chalk](https://www.npmjs.com/package/chalk): To style the terminal output with colors.
-- [Archiver](https://www.npmjs.com/package/archiver): For creating the ZIP archives.
-- [fs-extra](https://www.npmjs.com/package/fs-extra): For convenient file system operations.
+- **[yt-dlp-exec](https://www.npmjs.com/package/yt-dlp-exec):** Executes `yt-dlp` commands for all downloading tasks.
+- **[Inquirer](https://www.npmjs.com/package/inquirer):** Powers the interactive command-line menus.
+- **[Chalk](https://www.npmjs.com/package/chalk):** Styles the terminal output with colors for better readability.
+- **[fs-extra](https://www.npmjs.com/package/fs-extra):** Handles the creation of download directories.
 
 ---
 
@@ -81,7 +91,7 @@ Contributions, issues, and feature requests are welcome! Feel free to check the 
 
 ## ⚠️ Disclaimer
 
-This tool is intended for personal and educational use only. The developers are not responsible for how you use this application. Please respect the copyright of the content creators and adhere to YouTube's terms of service. Downloading copyrighted material without permission may be illegal in your country. Use this software at your own risk.
+This tool is for personal and educational use only. The developers are not responsible for how you use this application. Please respect the copyright of content creators and YouTube's terms of service. Downloading copyrighted material without permission may be illegal in your country. Use this software at your own risk.
 
 ---
 
